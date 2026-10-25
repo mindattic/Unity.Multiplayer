@@ -25,6 +25,15 @@
       `powershell -File tools/install-mp-host.ps1` packs it into C:\LocalNuGet and installs `mp-host` on PATH
       (dotnet tool install -g MindAttic.Unity.Multiplayer.Hosting.Cli add-source C:\LocalNuGet).
       HOUSE-LAW-1: whole-number versions only; bump the major.
+
+      UM-T80: PackageId keeps the MindAttic prefix on purpose even though UM-T35 renamed this repo's
+      in-code identity (namespaces, asmdef, assembly names) from MindAttic.Unity.Multiplayer to
+      Unity.Multiplayer. PackageId is a published, externally-consumed identifier, not source the
+      rename reached, same as the UPM package id com.mindattic.unity.multiplayer, which UM-T35
+      explicitly left alone; it follows the same MindAttic.(Product) convention as this org's other
+      NuGet ids (MindAttic.Vault, MindAttic.Tickets, MindAttic.Tickets.Cli). Renaming it would also
+      force every developer's existing global `mp-host` tool install to be retired and reinstalled
+      under a new id for no behavior change. Leave it as-is; this is not a leftover to sweep.
     -->
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>

@@ -7,7 +7,7 @@ namespace Unity.Multiplayer.Hosting.Cli.Cli;
 public static class RootCommand
 {
     private const string Usage = """
-        mp-host -- the MindAttic.Unity.Multiplayer hosting deploy CLI (UM-T25)
+        mp-host -- the Unity.Multiplayer hosting deploy CLI (UM-T25)
 
         Usage:
           mp-host game        local | down | deploy | update | status | logs | destroy [--project <unity project dir>] [--profile <p>] [--scene <path>] [--dry-run]

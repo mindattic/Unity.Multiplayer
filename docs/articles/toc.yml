@@ -2,6 +2,8 @@
   href: getting-started.md
 - name: The kit
   href: kit.md
+- name: Multiplayer-ready standard
+  href: multiplayer-ready.md
 - name: "Case study: Unity.Cursory"
   href: case-study-cursory.md
 - name: Drop-in front end

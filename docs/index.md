@@ -38,6 +38,8 @@ call, one server-to-everyone call and one server-owned field. The package's sour
   menus, votes, bots, tests and a server running in Docker, in minutes, with every step copy-pasteable.
 - **[The kit](articles/kit.md)**: Unity.Multiplayer, MindAttic Components and Unity.Shared, and which piece does
   which job.
+- **[Multiplayer-ready](articles/multiplayer-ready.md)**: the standard every MindAttic Unity game follows so co-op
+  or PvP can be added later without re-architecting, with a checklist and the law a game cites from its BIBLE.
 - **[Case study: Unity.Cursory](articles/case-study-cursory.md)**: how a full co-op physics game uses every piece.
 - **[Drop-in front end](articles/front-end.md)** — `NetFrontEnd`: main menu, lobby with join code, connection
   dialogs, reconnect and an in-game Esc menu from one component, with hooks for the game's own options.

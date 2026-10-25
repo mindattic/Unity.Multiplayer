@@ -9,6 +9,12 @@ carries the package's own version.
 
 ### Added
 
+- The Multiplayer-ready standard (UM-T74): [docs/articles/multiplayer-ready.md](docs/articles/multiplayer-ready.md)
+  holds the eight rules every MindAttic Unity game follows so co-op or PvP can be added without re-architecting
+  (commands stamped with a player id through one pipeline, one authority apart from presentation, no global player,
+  deterministic rules, stable ids, serializable state and commands, an `ISession` seam with a `LocalSession`, a
+  two-player test), a checklist, the law text games cite from their BIBLE, a rule-by-rule map onto the kit, and
+  Unity.Cursory as the ported-after-the-fact counter-example.
 - Unity Relay join codes set up end to end for a home host with no port forwarding (UM-T71).
   - **Engine-free check.** `RelaySetup` (Core) checks whether the package is installed and the project linked to a
     Unity Cloud project (`RelayReadiness`). It holds the setup sentences and turns raw Unity Services failures into

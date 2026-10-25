@@ -155,7 +155,17 @@ namespace Unity.Multiplayer.UI
             }
 
             NetFrontEnd frontEnd = FrontEndOf(board);
-            if (frontEnd == null || !frontEnd.HasMenus || board.Session == null || !board.Session.IsClient)
+            NetSession session = board.Session;
+            if (frontEnd == null || !frontEnd.HasMenus || session == null)
+            {
+                return;
+            }
+
+            // Not IsClient: a VoteBoard the host already had spawns on a joining client during its initial
+            // sync, before the session machine reaches Connected (IsClient needs IsLive). Skip only a peer with
+            // no local player at all: a dedicated server or bot (serving without being the host), or a session
+            // that is not active (already ended, or somehow never started).
+            if (!session.IsActive || (session.IsServer && !session.IsHost))
             {
                 return;
             }

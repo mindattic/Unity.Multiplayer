@@ -67,6 +67,56 @@ namespace Unity.Multiplayer.UI.Tests
             _onClient = copy.Result;
         }
 
+        /// <summary>
+        /// UM-T78: spawns the VoteBoard on the host before the client joins, so the client syncs the already-spawned board
+        /// as part of its own connection handshake, while its session is still Connecting (not yet live: <c>IsClient</c> is
+        /// false). Fails the test outright if that race is no longer reproduced, so a later change can't silently stop
+        /// covering it.
+        /// </summary>
+        private IEnumerator StartBoardBeforeClientJoins()
+        {
+            yield return StartServer();
+            _onHost = VoteBoard.Spawn(Server).AddKind(new VoteKind("reset", "Reset the level?") { Description = _ => "Everything goes back to the start", Passed = _ => _resets++ });
+
+            VoteBoard spawnedOnClient = null;
+            bool clientWasLiveAtSpawn = true;
+            System.Action<VoteBoard> onSpawned = board =>
+            {
+                if (board.Session == Client)
+                {
+                    spawnedOnClient = board;
+                    clientWasLiveAtSpawn = Client.IsLive;
+                }
+            };
+
+            VoteBoard.Spawned += onSpawned;
+            try
+            {
+                yield return Join(Client);
+            }
+            finally
+            {
+                VoteBoard.Spawned -= onSpawned;
+            }
+
+            Assert.That(spawnedOnClient, Is.Not.Null, "the VoteBoard already on the host was never synced to the joining client");
+            Assert.That(clientWasLiveAtSpawn, Is.False,
+                "the client's session was already live when its VoteBoard copy spawned; this no longer reproduces UM-T78's race");
+            _onClient = spawnedOnClient;
+        }
+
+        /// <summary>A client front end with menus forced on, bound to <see cref="NetSessionTest.Client"/>, not yet started.</summary>
+        private NetFrontEnd CreateClientFrontEnd()
+        {
+            FrontEndTesting.ForceMenus = true;
+            _frontEndObject = new GameObject("Client front end");
+            _frontEndObject.SetActive(false);
+            NetFrontEnd frontEnd = _frontEndObject.AddComponent<NetFrontEnd>();
+            FrontEndTesting.Bind(frontEnd, Client, Config);
+            frontEnd.Identity = new FixedIdentitySource("Bob", Color.blue);
+            return frontEnd;
+        }
+
         [UnityTest]
         public IEnumerator The_overlay_shows_the_vote_and_its_Yes_button_passes_it()
         {
@@ -126,12 +176,7 @@ namespace Unity.Multiplayer.UI.Tests
         [UnityTest]
         public IEnumerator With_a_front_end_in_game_the_overlay_wires_itself()
         {
-            FrontEndTesting.ForceMenus = true;
-            _frontEndObject = new GameObject("Client front end");
-            _frontEndObject.SetActive(false);
-            NetFrontEnd frontEnd = _frontEndObject.AddComponent<NetFrontEnd>();
-            FrontEndTesting.Bind(frontEnd, Client, Config);
-            frontEnd.Identity = new FixedIdentitySource("Bob", Color.blue);
+            NetFrontEnd frontEnd = CreateClientFrontEnd();
             _frontEndObject.SetActive(true);
             yield return null;
             Assert.That(frontEnd.HasMenus, Is.True);
@@ -155,6 +200,53 @@ namespace Unity.Multiplayer.UI.Tests
             yield return StartBoard();
             yield return null;
             Assert.That(VoteOverlay.For(_onClient), Is.Null, "a game without NetFrontEnd builds its own UI, or calls Create");
+        }
+
+        /// <summary>
+        /// UM-T78: a client joining a game that already has a running VoteBoard (the normal case for a second human joining
+        /// a host) syncs that board while its own session is still Connecting, not yet live. The overlay must still wire
+        /// itself then, not only for a board spawned after the client is already connected.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator A_board_that_spawns_before_the_client_is_live_still_gets_an_overlay()
+        {
+            NetFrontEnd frontEnd = CreateClientFrontEnd();
+            _frontEndObject.SetActive(true);
+            yield return null;
+            Assert.That(frontEnd.HasMenus, Is.True);
+
+            yield return StartBoardBeforeClientJoins();
+            Assert.That(VoteOverlay.For(_onClient), Is.Not.Null,
+                "no overlay was built for a board that spawned before the client's session went live (UM-T78)");
+        }
+
+        /// <summary>
+        /// UM-T78: with the race in <see cref="A_board_that_spawns_before_the_client_is_live_still_gets_an_overlay"/>, the
+        /// client's own overlay (wired despite not being live yet at Spawned) must still track the host's vote all the way
+        /// through: show it, and toast how it ended.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator The_joining_clients_overlay_shows_the_hosts_vote_and_toasts_its_end()
+        {
+            NetFrontEnd frontEnd = CreateClientFrontEnd();
+            _frontEndObject.SetActive(true);
+            yield return null;
+
+            yield return StartBoardBeforeClientJoins();
+            yield return WaitUntil(() => frontEnd.State == FrontEndState.InGame, () => "the front end never went in game (" + frontEnd.State + ")");
+            yield return WaitUntil(() => VoteOverlay.For(_onClient) != null,
+                "no overlay was wired for a board that spawned before the client went live");
+            VoteOverlay overlay = VoteOverlay.For(_onClient);
+
+            _onHost.StartVote("reset");
+            yield return WaitUntil(() => overlay.Panel.Visible, "the joining client's overlay never showed the host's vote");
+            Assert.That(overlay.TitleText.Text, Is.EqualTo("Reset the level?"));
+
+            _onClient.CastVote(true);
+            yield return WaitUntil(() => _resets == 1, "the second Yes (from the client) never passed the vote");
+            yield return WaitUntil(() => !overlay.Panel.Visible, "the joining client's overlay never hid once the vote ended");
+            yield return WaitUntil(() => MaToast.OnScreen.Any(t => t != null && t.Message == "Vote passed: Reset the level"),
+                "the joining client's overlay never toasted that the vote passed");
         }
     }
 }

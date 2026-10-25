@@ -25,6 +25,10 @@ namespace Unity.Multiplayer.Core
 
         /// <summary>The server has a password and the client gave none or a different one.</summary>
         WrongPassword = 6,
+
+        /// <summary>The player token belongs to a seat that is occupied by someone else who is still connected
+        /// (the host's own seat, which is never given up) rather than a dropped player's held seat.</summary>
+        TokenInUse = 7,
     }
 
     /// <summary>

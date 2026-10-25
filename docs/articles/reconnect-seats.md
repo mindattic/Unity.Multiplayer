@@ -18,10 +18,12 @@ approval callback checks, in order:
    code is refused before it can call anything unexpected.
 4. **Ban list** — `IBanList` / `InMemoryBanList`, or your own implementation set on `NetSession.BanList`.
 5. **Capacity** — `NetConfig.MaxPlayers`, with a returning player's own held seat excluded from the count.
+6. **Seating** — once past the checks above, `SeatRegistry.Claim` seats the connection; a token whose seat is the
+   host's own and still connected is refused here instead (`TokenInUse`, see below).
 
 A rejection carries a typed `ApprovalRejection` (`BadPayload`, `VersionMismatch`, `ProtocolMismatch`, `Banned`,
-`Full`) and a wire reason string; the client's `NetSession.LastDisconnect` reports it in plain language, and
-`NetSession.ConnectionRejected` fires server-side.
+`Full`, `TokenInUse`) and a wire reason string; the client's `NetSession.LastDisconnect` reports it in plain
+language, and `NetSession.ConnectionRejected` fires server-side.
 
 ## Seats
 
@@ -45,6 +47,12 @@ one (`SeatReclaimed`). A token still seated on a connection the server hasn't ye
 client restarted, for example) **takes the seat over** from the stale connection, which the server then drops
 (`SeatClaimOutcome.TookOver`); this is the one case where the server proactively closes a connection it hasn't
 heard disconnect yet.
+
+The host's own seat is the one exception: it is never taken over while connected. A player token is remembered
+per install folder (see below), so a second copy of the same build launched from that folder and joined by IP
+sends the *host's own token* — not a stale reconnect, since the host never legitimately comes back through the
+join path. That join is refused (`SeatClaimOutcome.Refused`, `ApprovalRejection.TokenInUse`) rather than bumping
+the host out of its own lobby and game (UM-T77).
 
 ```csharp
 session.SeatTaken    += seat => { /* a new player took the lowest free seat */ };

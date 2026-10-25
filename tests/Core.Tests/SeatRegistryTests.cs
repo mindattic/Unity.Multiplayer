@@ -111,6 +111,50 @@ namespace Unity.Multiplayer.Core.Tests
         }
 
         [Test]
+        public void SameTokenAsTheHosts_NeverTakesTheHostsSeatOver()
+        {
+            var seats = new SeatRegistry(4, 30);
+            seats.Claim(0, Player("host"), 0, isHost: true);
+
+            SeatClaim stray = seats.Claim(20, Player("host"), 5);
+
+            Assert.That(stray.Outcome, Is.EqualTo(SeatClaimOutcome.Refused));
+            Assert.That(stray.Seated, Is.False);
+            Assert.That(stray.ReplacedClientId, Is.Null);
+
+            // The host keeps its seat, untouched.
+            Assert.That(seats.TryGetByClient(0, out Seat hostSeat), Is.True);
+            Assert.That(hostSeat.Status, Is.EqualTo(SeatStatus.Occupied));
+            Assert.That(hostSeat.ClientId, Is.EqualTo(0UL));
+            Assert.That(seats.TryGetByClient(20, out _), Is.False);
+        }
+
+        [Test]
+        public void HostClaimingItsOwnSeatAgain_ChangesNothing()
+        {
+            var seats = new SeatRegistry(4, 30);
+            seats.Claim(0, Player("host"), 0, isHost: true);
+
+            SeatClaim again = seats.Claim(0, Player("host", "Host", new PlayerColor(9, 9, 9)), 1, isHost: true);
+
+            Assert.That(again.Outcome, Is.EqualTo(SeatClaimOutcome.Reclaimed));
+            Assert.That(again.Seat.ClientId, Is.EqualTo(0UL));
+        }
+
+        [Test]
+        public void HostsSeatHeldAfterItDrops_CanStillBeReclaimedByTheRealHost()
+        {
+            var seats = new SeatRegistry(4, 30);
+            seats.Claim(0, Player("host"), 0, isHost: true);
+            seats.Release(0, 1);
+
+            SeatClaim back = seats.Claim(0, Player("host"), 2, isHost: true);
+
+            Assert.That(back.Outcome, Is.EqualTo(SeatClaimOutcome.Reclaimed));
+            Assert.That(back.Seat.ClientId, Is.EqualTo(0UL));
+        }
+
+        [Test]
         public void SameConnectionClaimingTwice_ChangesNothing()
         {
             var seats = new SeatRegistry(4, 30);

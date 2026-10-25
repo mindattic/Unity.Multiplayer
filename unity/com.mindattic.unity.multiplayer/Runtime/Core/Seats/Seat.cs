@@ -32,6 +32,13 @@ namespace Unity.Multiplayer.Core
 
         /// <summary>No seat is free.</summary>
         Full = 3,
+
+        /// <summary>
+        /// The token's seat is occupied by the host, who is never stale: a join presenting it is a stray copy of
+        /// the install (for example, saved player-prefs shared by two copies of the same build), not the host
+        /// reconnecting, so the connection is refused rather than bumping the host out of its own game.
+        /// </summary>
+        Refused = 4,
     }
 
     /// <summary>

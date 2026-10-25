@@ -118,6 +118,28 @@ namespace Unity.Multiplayer.Core.Tests
         }
 
         [Test]
+        public void JoinWithTheHostsOwnToken_IsRefused_AndTheHostKeepsItsSeat()
+        {
+            ConnectionAdmission server = Server();
+            server.AdmitLocal(0, new ConnectionPayload("1.0", Hash, "host", "Host", PlayerColor.White), 0);
+
+            // A second copy of the same build, launched from the same install folder, remembers the host's token
+            // (UM-T77) and joins by IP as a remote client.
+            Admission stray = server.Admit(7, Request("host"), 1);
+
+            Assert.That(stray.Approved, Is.False);
+            Assert.That(stray.Decision.Rejection, Is.EqualTo(ApprovalRejection.TokenInUse));
+            Assert.That(stray.Claim.Seated, Is.False);
+
+            Assert.That(server.Seats.TryGetByClient(0, out Seat hostSeat), Is.True);
+            Assert.That(hostSeat.Status, Is.EqualTo(SeatStatus.Occupied));
+            Assert.That(server.Seats.TryGetByClient(7, out _), Is.False);
+
+            Assert.That(ApprovalDecision.TryParseWireReason(stray.Decision.ToWireReason(), out ApprovalRejection rejection, out _), Is.True);
+            Assert.That(rejection, Is.EqualTo(ApprovalRejection.TokenInUse));
+        }
+
+        [Test]
         public void NullArguments_Throw()
         {
             Assert.Throws<ArgumentNullException>(() => new ConnectionAdmission(null, new SeatRegistry(1, 1)));

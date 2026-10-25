@@ -14,6 +14,9 @@ namespace Unity.Multiplayer.Core
     /// (the connection dropped) holds it for <see cref="GraceSeconds"/>; a <see cref="Claim"/> with the same token
     /// in that time takes it back. <see cref="Expire"/> frees held seats whose time ran out; <see cref="Free(string)"/>
     /// frees one at once (a kick). Held seats count as taken: a new player cannot sit in a seat someone may return to.</para>
+    /// <para>The host's seat (claimed with <c>isHost: true</c>) is never taken over while occupied: a join presenting
+    /// its token from a different connection is refused (<see cref="SeatClaimOutcome.Refused"/>), not treated as a
+    /// stale-connection reconnect, since the host never legitimately comes back through <see cref="Claim"/> (UM-T77).</para>
     /// </remarks>
     public sealed class SeatRegistry
     {
@@ -126,9 +129,14 @@ namespace Unity.Multiplayer.Core
         /// <param name="clientId">The new connection.</param>
         /// <param name="payload">The approved payload (token, name and colour).</param>
         /// <param name="now">The current time in seconds; held seats that ran out by then are freed first and do not come back.</param>
+        /// <param name="isHost">
+        /// True only for the host's own seat (<see cref="ConnectionAdmission.AdmitLocal"/>): marks the seat so a
+        /// later join presenting the same token, from a different connection, is refused instead of taking the
+        /// host's live seat over (UM-T77) — the host never goes through this method again to legitimately reclaim it.
+        /// </param>
         /// <exception cref="ArgumentNullException"><paramref name="payload"/> is null.</exception>
         /// <exception cref="InvalidOperationException"><paramref name="clientId"/> already sits in another player's seat.</exception>
-        public SeatClaim Claim(ulong clientId, ConnectionPayload payload, double now)
+        public SeatClaim Claim(ulong clientId, ConnectionPayload payload, double now, bool isHost = false)
         {
             if (payload == null)
             {
@@ -151,6 +159,18 @@ namespace Unity.Multiplayer.Core
 
             if (entry != null)
             {
+                if (isHost)
+                {
+                    entry.MarkHost();
+                }
+
+                if (entry.Status == SeatStatus.Occupied && entry.IsHost && entry.ClientId != clientId)
+                {
+                    // The host's seat is connected and this is not the host reconnecting (the host never comes
+                    // back through this path) - never bump it out, whatever the token says (UM-T77).
+                    return new SeatClaim(SeatClaimOutcome.Refused, null, null);
+                }
+
                 SeatClaimOutcome outcome;
                 ulong? replaced = null;
                 if (entry.Status == SeatStatus.Held)
@@ -185,6 +205,11 @@ namespace Unity.Multiplayer.Core
             entry = new Entry(LowestFreeIndex(), token);
             entry.Update(payload);
             entry.Occupy(clientId);
+            if (isHost)
+            {
+                entry.MarkHost();
+            }
+
             _byToken[token] = entry;
             _byClient[clientId] = entry;
             return new SeatClaim(SeatClaimOutcome.New, entry.Snapshot(), null);
@@ -336,6 +361,14 @@ namespace Unity.Multiplayer.Core
             public double HeldUntil { get; private set; }
 
             public int Reconnects { get; set; }
+
+            /// <summary>True once this seat has been claimed as the host's own (sticky: never cleared back to false).</summary>
+            public bool IsHost { get; private set; }
+
+            public void MarkHost()
+            {
+                IsHost = true;
+            }
 
             public void Update(ConnectionPayload payload)
             {

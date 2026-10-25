@@ -81,9 +81,13 @@ namespace Unity.Multiplayer.Core
             SeatClaim claim = Seats.Claim(clientId, decision.Payload, now);
             if (!claim.Seated)
             {
-                // The validator counted seats a moment ago, so this only happens if the two disagree on capacity.
-                decision = ApprovalDecision.Reject(ApprovalRejection.Full,
-                    "The server is full (" + Seats.Capacity + " of " + Seats.Capacity + " players).", decision.Payload);
+                decision = claim.Outcome == SeatClaimOutcome.Refused
+                    // The token's seat is the host's own and still connected: never bump the host (UM-T77).
+                    ? ApprovalDecision.Reject(ApprovalRejection.TokenInUse,
+                        "That player is already connected to this game.", decision.Payload)
+                    // Otherwise the validator counted seats a moment ago, so this only happens if the two disagree on capacity.
+                    : ApprovalDecision.Reject(ApprovalRejection.Full,
+                        "The server is full (" + Seats.Capacity + " of " + Seats.Capacity + " players).", decision.Payload);
             }
 
             return new Admission(decision, claim, expired);
@@ -102,7 +106,7 @@ namespace Unity.Multiplayer.Core
             }
 
             IReadOnlyList<Seat> expired = Seats.Expire(now);
-            SeatClaim claim = Seats.Claim(clientId, payload, now);
+            SeatClaim claim = Seats.Claim(clientId, payload, now, isHost: true);
             return new Admission(ApprovalDecision.Approve(payload), claim, expired);
         }
     }

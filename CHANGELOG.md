@@ -45,6 +45,12 @@ carries the package's own version.
   now adds the constraint to any asmdef under `Assets` that references the kit without it, and logs that
   `ProjectSettings/ProjectSettings.asset` must be committed whenever it changes the define; New Game says the same.
   `tests/run-new-game.ps1` batch-builds a clean copy of the generated game and fails if a committed file changes.
+- A client presenting the host's own player token can no longer take the host's live player over (UM-T77). The
+  player token is remembered per install folder, so a second copy of the same build joining by IP sent the host's
+  token, and `SeatRegistry` admitted it as a reconnect — the host lost its seat and its Host/you row. `SeatRegistry.Claim`
+  now marks the host's seat (`isHost: true`, set by `ConnectionAdmission.AdmitLocal`) and refuses any other connection
+  that presents its token while it is still occupied (`SeatClaimOutcome.Refused`, `ApprovalRejection.TokenInUse`)
+  instead of bumping the host out; a dropped and re-held host seat can still be reclaimed normally.
 
 ## [2.0.0] — 2026-10-21
 

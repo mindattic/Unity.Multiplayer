@@ -110,6 +110,9 @@ namespace Unity.Multiplayer.Core
                 case ApprovalRejection.BadPayload:
                     return new DisconnectMessage("Couldn't join",
                         "The host could not read your join request. Update both games to the same version.", detail);
+                case ApprovalRejection.TokenInUse:
+                    return new DisconnectMessage("Already connected",
+                        "That player is already connected to this game. If this is a second copy of the game, sign in as a different player.", detail);
                 default:
                     return new DisconnectMessage("Couldn't join", "The host turned the connection down.", detail);
             }

@@ -55,6 +55,7 @@ namespace Unity.Multiplayer.Core.Tests
             Assert.That(DisconnectText.For(new Disconnection(DisconnectReason.Rejected, "b", ApprovalRejection.Banned)).Body, Does.Contain("banned"));
             Assert.That(DisconnectText.For(new Disconnection(DisconnectReason.Rejected, "p", ApprovalRejection.WrongPassword)).Title, Is.EqualTo("Wrong password"));
             Assert.That(DisconnectText.For(new Disconnection(DisconnectReason.Rejected, "p", ApprovalRejection.BadPayload)).Title, Is.EqualTo("Couldn't join"));
+            Assert.That(DisconnectText.For(new Disconnection(DisconnectReason.Rejected, "t", ApprovalRejection.TokenInUse)).Title, Is.EqualTo("Already connected"));
             Assert.That(DisconnectText.For(new Disconnection(DisconnectReason.Rejected, "p", ApprovalRejection.ProtocolMismatch)).Detail,
                 Is.Empty, "a protocol hash means nothing to a player");
         }

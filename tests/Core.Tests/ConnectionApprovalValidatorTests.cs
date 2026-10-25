@@ -165,6 +165,8 @@ namespace Unity.Multiplayer.Core.Tests
         [TestCase(ApprovalRejection.Full)]
         [TestCase(ApprovalRejection.Banned)]
         [TestCase(ApprovalRejection.BadPayload)]
+        [TestCase(ApprovalRejection.WrongPassword)]
+        [TestCase(ApprovalRejection.TokenInUse)]
         public void WireReason_RoundTrips(ApprovalRejection rejection)
         {
             ApprovalDecision decision = ApprovalDecision.Reject(rejection, "Some text | with a bar.");

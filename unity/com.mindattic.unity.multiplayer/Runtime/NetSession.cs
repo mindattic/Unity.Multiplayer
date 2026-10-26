@@ -639,6 +639,7 @@ namespace Unity.Multiplayer
             _machine.Start(copy.Topology);
 
             bool started;
+            Exception failure = null;
             try
             {
                 switch (copy.Topology)
@@ -656,14 +657,25 @@ namespace Unity.Multiplayer
             }
             catch (Exception ex)
             {
-                Debug.LogException(ex);
+                failure = ex;
                 started = false;
             }
 
             if (!started)
             {
-                string message = "NGO could not start a " + copy.Topology + " on " + copy.EffectiveAddress + ":" + copy.Port
-                    + " over " + copy.Transport + " (is the port already in use?).";
+                // NGO returning false with nothing thrown really does mean the transport could not bind (the port is
+                // taken); an exception is a different problem (for example NGO's own setup not finished yet), so that
+                // real reason is reported instead of guessing at a port conflict.
+                string message = failure != null
+                    ? "NGO could not start a " + copy.Topology + " on " + copy.EffectiveAddress + ":" + copy.Port
+                        + " over " + copy.Transport + ": " + failure.GetType().Name + ": " + failure.Message
+                    : "NGO could not start a " + copy.Topology + " on " + copy.EffectiveAddress + ":" + copy.Port
+                        + " over " + copy.Transport + " (is the port already in use?).";
+                if (failure != null)
+                {
+                    Debug.LogException(failure);
+                }
+
                 Debug.LogWarning("[MindAttic.Multiplayer] " + message);
                 if (_machine.IsActive)
                 {

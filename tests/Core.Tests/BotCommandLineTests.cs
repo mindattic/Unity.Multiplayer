@@ -57,6 +57,26 @@ namespace Unity.Multiplayer.Core.Tests
             BotLaunchOptions options = BotCommandLine.Parse(new[] { "-joincodes", "rendezvous", "-bot", "runner", "-address", "10.0.0.5" });
             Assert.That(options.JoinCode, Is.Null);
             Assert.That(options.Role, Is.EqualTo("runner"));
+            Assert.That(options.IsValid, Is.True, string.Join("; ", options.Errors));
+        }
+
+        [Test]
+        public void Parse_WithAddress_NeedsNoJoinCode_EvenAsAnAlias_OrInlineValue()
+        {
+            Assert.That(BotCommandLine.Parse(new[] { "-bot", "A", "-address", "127.0.0.1" }).IsValid, Is.True);
+            Assert.That(BotCommandLine.Parse(new[] { "-bot", "A", "-ip", "127.0.0.1" }).IsValid, Is.True, "-ip is -address's alias");
+            Assert.That(BotCommandLine.Parse(new[] { "-bot", "A", "-address=127.0.0.1" }).IsValid, Is.True, "inline -address=value");
+        }
+
+        [Test]
+        public void Parse_WithNoJoinCodeAndNoAddress_StillReportsItNeedsOne()
+        {
+            BotLaunchOptions options = BotCommandLine.Parse(new[] { "-bot", "A" });
+            Assert.That(options.IsValid, Is.False);
+            Assert.That(options.Errors, Has.Some.Contains(BotCommandLine.JoinCodeArg));
+            Assert.That(options.Errors, Has.Some.Contains(NetCommandLine.AddressArg), "the error should mention -address is also a way to join");
+
+            Assert.That(BotCommandLine.Parse(new[] { "-bot", "A", "-address", string.Empty }).IsValid, Is.False, "a blank -address is not an address");
         }
 
         [Test]

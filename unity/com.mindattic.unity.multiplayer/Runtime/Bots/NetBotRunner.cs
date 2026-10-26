@@ -219,7 +219,9 @@ namespace Unity.Multiplayer
                 Bot.Log("joining " + address + ":" + _options.JoinConfig.Port);
                 if (!_session.JoinByAddress(address, _options.JoinConfig.Port, _options.JoinConfig))
                 {
-                    Fail("JoinByAddress(" + address + ":" + _options.JoinConfig.Port + ") refused to start.");
+                    string reason = _session.LastDisconnect.Message;
+                    Fail("JoinByAddress(" + address + ":" + _options.JoinConfig.Port + ") refused to start"
+                        + (string.IsNullOrEmpty(reason) ? "." : ": " + reason));
                     return;
                 }
             }

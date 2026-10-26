@@ -127,12 +127,52 @@ namespace Unity.Multiplayer.Core
                 }
             }
 
-            if (role != null && code == null && codeFile == null)
+            if (role != null && code == null && codeFile == null && !HasAddress(args))
             {
-                errors.Add(BotArg + " " + role + " needs " + JoinCodeArg + " <code> or " + JoinCodeFileArg + " <path> to join by.");
+                errors.Add(BotArg + " " + role + " needs " + JoinCodeArg + " <code>, " + JoinCodeFileArg + " <path> or "
+                    + NetCommandLine.AddressArg + " <ip> to join by.");
             }
 
             return new BotLaunchOptions(role, code, codeFile, scenario, timeout, errors);
+        }
+
+        /// <summary>True when <c>-address</c> (or its alias <c>-ip</c>) is given with a non-blank value.</summary>
+        private static bool HasAddress(IReadOnlyList<string> args)
+        {
+            for (int i = 0; i < args.Count; i++)
+            {
+                string arg = args[i];
+                if (string.IsNullOrEmpty(arg) || arg[0] != '-')
+                {
+                    continue;
+                }
+
+                string name = arg;
+                string value = null;
+                int equals = arg.IndexOf('=');
+                if (equals > 0)
+                {
+                    name = arg.Substring(0, equals);
+                    value = arg.Substring(equals + 1);
+                }
+
+                if (!Is(name, NetCommandLine.AddressArg) && !Is(name, NetCommandLine.IpArg))
+                {
+                    continue;
+                }
+
+                if (value == null && i + 1 < args.Count && !string.IsNullOrEmpty(args[i + 1]) && args[i + 1][0] != '-')
+                {
+                    value = args[i + 1];
+                }
+
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static bool Is(string name, string expected)

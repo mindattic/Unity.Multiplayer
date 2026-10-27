@@ -54,7 +54,7 @@ it opens the scene first, so `server.json` carries that scene's whole NetBootstr
 mode, `game` uses Docker Desktop's Linux engine for that run.
 
 An optional **`mp-host.json`** at the project root sets defaults for any option (a flag always wins), e.g.
-`{ "name": "cursory", "image": "mindattic/unity-cursory" }`. The repo's own `deploy.ps1`, if it keeps one for the
+`{ "name": "cursory", "image": "mindattic/unity-cursory" }`. The repo's own `run.ps1`, if it keeps one for the
 `/deploy` router, is then just `mp-host game deploy --project $PSScriptRoot @args`.
 
 `mp-host game smoke` builds the same project as one Linux player and runs it as a dedicated server, the rendezvous
@@ -214,7 +214,7 @@ and `mp-host deploy`/`update`/`destroy` read it back by name:
 file it would send, so you can check a deploy before it touches a credential-backed resource or
 spends provider credit. A dry run needs no stored GHCR credential or SSH target: when one is
 missing it warns and prints `<dry-run placeholder ...>` values in its place, so a game's
-`deploy.ps1 -DryRun` works on a fresh machine (the big-cloud launch options above still have to be
+`run.ps1 -DryRun` works on a fresh machine (the big-cloud launch options above still have to be
 stored, since they name real local key files).
 
 ## TLS

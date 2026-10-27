@@ -59,7 +59,7 @@ public sealed class HostingComposer
     /// <summary>
     /// GHCR credentials from the vault. Required for every real deploy/update. A dry run touches
     /// nothing, so with no GHCR credential stored it warns and uses clearly-labelled placeholders
-    /// instead of refusing (UM-T49): <c>deploy.ps1 -DryRun</c> works on a fresh machine.
+    /// instead of refusing (UM-T49): <c>run.ps1 -DryRun</c> works on a fresh machine.
     /// </summary>
     /// <exception cref="InvalidOperationException">No GHCR credential is stored and this is not a dry run.</exception>
     public HostingCredentialStore.GhcrCreds RequireGhcrCreds(IDeployLog log)

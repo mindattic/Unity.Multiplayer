@@ -7,7 +7,7 @@ namespace Unity.Multiplayer.Hosting.Cli.Game;
 /// Server packages are Linux images. Docker Desktop on Windows in Windows-containers mode still runs its Linux
 /// engine on its own pipe, so rather than make the operator switch engines, <see cref="PreferLinuxAsync"/> points this
 /// process (and every docker/compose child it starts) at that engine through <c>DOCKER_HOST</c> (UM-T58; this was
-/// Unity.Cursory's <c>deploy.ps1</c> Use-LinuxDockerEngine).
+/// Unity.Cursory's root <c>run.ps1</c> Use-LinuxDockerEngine).
 /// </summary>
 public static class DockerEngine
 {

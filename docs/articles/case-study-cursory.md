@@ -140,7 +140,7 @@ See [Bots](bots.md).
 Cursory has no build or deploy code of its own.
 [mp-host.json](https://github.com/mindattic/Unity.Cursory/blob/main/mp-host.json) holds its defaults
 (`"name": "cursory"`, `"image": "mindattic/unity-cursory"`, `"bots": "A,B"`, `"scenario": "2"`), and
-[deploy.ps1](https://github.com/mindattic/Unity.Cursory/blob/main/deploy.ps1) is a thin call to
+[run.ps1](https://github.com/mindattic/Unity.Cursory/blob/main/run.ps1) is a thin call to
 `mp-host game deploy | local | down --project .`, kept so MindAttic's `/deploy` router finds it. `mp-host game` finds
 the editor, builds the server package from `Main.unity` with the library's batch build, and deploys it. Credentials live
 in MindAttic.Vault. See Cursory's [docs/hosting.md](https://github.com/mindattic/Unity.Cursory/blob/main/docs/hosting.md)

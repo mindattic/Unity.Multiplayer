@@ -104,3 +104,6 @@ _Nothing recorded yet._
 | UM-T81 | 2026-10-24 | docs | closed | Update USER_STORIES.md | — |
 | UM-T82 | 2026-10-25 | fix | closed | VoteOverlay.OnBoardSpawned skips a VoteBoard whose session isn't IsClient yet, so a client joining after the board spawned never gets the overlay (worked around in Unity.Ricochet's ClientVoteOverlays, U.RICO-T20) | 4dd5924 |
 | UM-T83 | 2026-10-27 | docs | closed | Update USER_STORIES.md | — |
+| UM-T84 | 2026-10-31 | feature | closed | LAMP: move Unity.Multiplayer Hosting.Cli's app-level settings and keys to MindAttic.Vault.Desktop (manifest, LoadOrSeed, shared named keys, cog opens Vault) | 4044ad3 Hosting.Cli.Tests (343/343); editing via M.VALT-T62 |
+| UM-T85 | 2026-10-31 | fix | closed | Hosting.Cli references MindAttic.Vault 7.0.0 (UM-T84) but lib/local-packages only holds Vault 6.0.0, so CI's restore (Hosting.Cli.Tests, game-smoke) can't find it; drop MindAttic.Vault.7.0.0.nupkg into lib/local-packages per NuGet.config's note | 39c8168 restore into an empty package cache succeeds |
+| UM-T86 | 2026-10-31 | docs | closed | Update USER_STORIES.md | — |

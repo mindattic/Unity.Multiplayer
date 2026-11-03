@@ -15,7 +15,7 @@ namespace Unity.Multiplayer.Hosting.Cli.Credentials;
 ///   "runpod":    { "type": "runpod",    "apiKey": "&lt;RunPod API key&gt;" },
 ///   "rendezvous": { "type": "rendezvous", "apiKey": "&lt;rendezvous registration secret&gt;" },
 ///   "genericvps:prod-box": { "type": "ssh", "apiKey": "&lt;passphrase or empty&gt;", "secret": "root@203.0.113.10:22",
-///                             "sshKeyPath": "C:\\Users\\me\\.ssh\\id_ed25519" }
+///                             "sshKeyPath": "C:\\Users\\me\\.ssh\\id_ed25519", "sshFormat": 2 }
 /// }
 /// </code>
 /// Every real provisioner call reads from here; nothing it needs is ever passed on the command
@@ -254,16 +254,72 @@ public sealed class HostingCredentialStore : CredentialStore
                 hostPort = hostPort[(at + 1)..];
             }
 
-            (host, port) = SplitHostPort(hostPort, port);
+            bool current = IsCurrentSshFormat(doc);
+            (host, port) = current ? SplitHostPort(hostPort, port) : SplitLegacyHostPort(hostPort, port);
 
             string keyPath = StringProp(doc, "sshKeyPath");
             if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(keyPath)) return null;
             string? passphrase = StringPropOrNull(doc, "apiKey");
-            return new SshCreds(host, port, user, keyPath, string.IsNullOrWhiteSpace(passphrase) ? null : passphrase);
+            var creds = new SshCreds(host, port, user, keyPath, string.IsNullOrWhiteSpace(passphrase) ? null : passphrase);
+            if (!current) TryMigrateSshCreds(serverName, creds);
+            return creds;
         }
         catch (JsonException)
         {
             return null;
+        }
+    }
+
+    /// <summary>
+    /// The <c>sshFormat</c> marker <see cref="SetSshCreds"/> writes since UM-T89. Entries without it were
+    /// written before UM-T88 bracketed IPv6 hosts, so an unbracketed IPv6 "secret" in them still ends in
+    /// the port (<c>root@2001:db8::1:22</c>) and is read by <see cref="SplitLegacyHostPort"/>.
+    /// </summary>
+    internal const int CurrentSshFormat = 2;
+
+    private static bool IsCurrentSshFormat(JsonDocument doc) =>
+        doc.RootElement.ValueKind == JsonValueKind.Object
+        && doc.RootElement.TryGetProperty("sshFormat", out var v)
+        && v.ValueKind == JsonValueKind.Number
+        && v.TryGetInt32(out int format)
+        && format >= CurrentSshFormat;
+
+    /// <summary>
+    /// Splits an unmarked (pre-UM-T89) "host[:port]" the way the old code did (UM-T89): the old
+    /// SetSshCreds always appended ":port" and never bracketed, so "2001:db8::1:22" is host
+    /// "2001:db8::1", port 22 (split on the last colon). Bracketed values (only ever hand-entered) and
+    /// unbracketed multi-colon values whose prefix is not a valid IPv6 address (a bare address with no
+    /// port, e.g. "2001:db8::1") fall through to the current <see cref="SplitHostPort"/> rule.
+    /// </summary>
+    internal static (string Host, int Port) SplitLegacyHostPort(string hostPort, int defaultPort)
+    {
+        if (!hostPort.StartsWith('[') && hostPort.IndexOf(':') != hostPort.LastIndexOf(':'))
+        {
+            int colon = hostPort.LastIndexOf(':');
+            string prefix = hostPort[..colon];
+            if (int.TryParse(hostPort[(colon + 1)..], NumberStyles.None, CultureInfo.InvariantCulture, out int legacyPort)
+                && System.Net.IPAddress.TryParse(prefix, out var address)
+                && address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+            {
+                return (prefix, legacyPort);
+            }
+        }
+
+        return SplitHostPort(hostPort, defaultPort);
+    }
+
+    /// <summary>
+    /// Rewrites an old-format entry in the current (marked, IPv6-bracketed) form so nobody has to re-save
+    /// it (UM-T89). Best effort: a read never fails because the keyring could not be written.
+    /// </summary>
+    private void TryMigrateSshCreds(string serverName, SshCreds creds)
+    {
+        try
+        {
+            SetSshCreds(serverName, creds);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
         }
     }
 
@@ -306,6 +362,7 @@ public sealed class HostingCredentialStore : CredentialStore
             string host = creds.Host.Contains(':') && !creds.Host.StartsWith('[') ? $"[{creds.Host}]" : creds.Host;
             w.WriteString("secret", $"{creds.User}@{host}:{creds.Port}");
             w.WriteString("sshKeyPath", creds.PrivateKeyPath);
+            w.WriteNumber("sshFormat", CurrentSshFormat);
         }));
     }
 

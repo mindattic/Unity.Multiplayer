@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using MindAttic.Vault.Credentials;
 using MindAttic.Vault.Paths;
@@ -253,16 +254,7 @@ public sealed class HostingCredentialStore : CredentialStore
                 hostPort = hostPort[(at + 1)..];
             }
 
-            int colon = hostPort.LastIndexOf(':');
-            if (colon >= 0 && int.TryParse(hostPort[(colon + 1)..], out int parsedPort))
-            {
-                host = hostPort[..colon];
-                port = parsedPort;
-            }
-            else
-            {
-                host = hostPort;
-            }
+            (host, port) = SplitHostPort(hostPort, port);
 
             string keyPath = StringProp(doc, "sshKeyPath");
             if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(keyPath)) return null;
@@ -275,6 +267,33 @@ public sealed class HostingCredentialStore : CredentialStore
         }
     }
 
+    /// <summary>
+    /// Splits the stored "host[:port]" (after any "user@"), IPv6-aware (UM-T88): "[2001:db8::1]:2222" and
+    /// "[2001:db8::1]" are bracketed IPv6 with and without a port; an unbracketed value with more than one
+    /// colon ("2001:db8::1") is a bare IPv6 address and takes the default port, since its last group would
+    /// otherwise be misread as one; "host:2222" and "203.0.113.5" keep their old meaning.
+    /// </summary>
+    internal static (string Host, int Port) SplitHostPort(string hostPort, int defaultPort)
+    {
+        if (hostPort.StartsWith('['))
+        {
+            int close = hostPort.IndexOf(']');
+            if (close < 0) return (hostPort, defaultPort);
+            string inner = hostPort[1..close];
+            string rest = hostPort[(close + 1)..];
+            if (rest.StartsWith(':') && int.TryParse(rest[1..], NumberStyles.None, CultureInfo.InvariantCulture, out int bracketPort))
+                return (inner, bracketPort);
+            return (inner, defaultPort);
+        }
+
+        int first = hostPort.IndexOf(':');
+        int colon = hostPort.LastIndexOf(':');
+        if (first != colon) return (hostPort, defaultPort);
+        if (colon >= 0 && int.TryParse(hostPort[(colon + 1)..], NumberStyles.None, CultureInfo.InvariantCulture, out int parsedPort))
+            return (hostPort[..colon], parsedPort);
+        return (hostPort, defaultPort);
+    }
+
     /// <summary>Upserts the SSH target for <paramref name="serverName"/>'s generic-VPS entry.</summary>
     public void SetSshCreds(string serverName, SshCreds creds)
     {
@@ -283,7 +302,9 @@ public sealed class HostingCredentialStore : CredentialStore
         {
             w.WriteString("type", "ssh");
             w.WriteString("apiKey", creds.Passphrase ?? "");
-            w.WriteString("secret", $"{creds.User}@{creds.Host}:{creds.Port}");
+            // An IPv6 host is bracketed so its port can be told from its last group on the way back in.
+            string host = creds.Host.Contains(':') && !creds.Host.StartsWith('[') ? $"[{creds.Host}]" : creds.Host;
+            w.WriteString("secret", $"{creds.User}@{host}:{creds.Port}");
             w.WriteString("sshKeyPath", creds.PrivateKeyPath);
         }));
     }

@@ -66,7 +66,12 @@ namespace Unity.Multiplayer.Core
             return new ServerLogFile(path, writer);
         }
 
-        /// <summary>The log files in <paramref name="directory"/>, oldest first (their names sort by time).</summary>
+        /// <summary>
+        /// The log files in <paramref name="directory"/>, oldest first: by last-write time, then by the run their name
+        /// stands for (its timestamp, then its same-second suffix, the unsuffixed file being the first of that second).
+        /// Names alone mis-order same-second runs ("-2" sorts before the unsuffixed file, "-10" before "-2"), and a
+        /// clock that went back would mis-order them too (UM-T88).
+        /// </summary>
         public static IReadOnlyList<string> List(string directory)
         {
             if (!Directory.Exists(directory))
@@ -74,9 +79,70 @@ namespace Unity.Multiplayer.Core
                 return new string[0];
             }
 
-            var files = new List<string>(Directory.GetFiles(directory, FilePrefix + "*" + FileExtension));
-            files.Sort(StringComparer.Ordinal);
-            return files;
+            var files = new List<(string Path, DateTime Written)>();
+            foreach (string file in Directory.GetFiles(directory, FilePrefix + "*" + FileExtension))
+            {
+                DateTime written;
+                try
+                {
+                    written = File.GetLastWriteTimeUtc(file);
+                }
+                catch (IOException)
+                {
+                    written = DateTime.MinValue;
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    written = DateTime.MinValue;
+                }
+
+                files.Add((file, written));
+            }
+
+            files.Sort((a, b) =>
+            {
+                int byTime = a.Written.CompareTo(b.Written);
+                return byTime != 0 ? byTime : CompareRunNames(a.Path, b.Path);
+            });
+            var paths = new List<string>(files.Count);
+            foreach (var f in files)
+            {
+                paths.Add(f.Path);
+            }
+
+            return paths;
+        }
+
+        // "server-20261020-120000.log" is run 1 of that second, "server-20261020-120000-2.log" run 2, and so on.
+        private static int CompareRunNames(string a, string b)
+        {
+            SplitRunName(a, out string stampA, out int runA);
+            SplitRunName(b, out string stampB, out int runB);
+            int byStamp = string.CompareOrdinal(stampA, stampB);
+            if (byStamp != 0)
+            {
+                return byStamp;
+            }
+
+            int byRun = runA.CompareTo(runB);
+            return byRun != 0 ? byRun : string.CompareOrdinal(a, b);
+        }
+
+        private static void SplitRunName(string path, out string stamp, out int run)
+        {
+            string name = System.IO.Path.GetFileNameWithoutExtension(path);
+            const int StampLength = 15; // yyyyMMdd-HHmmss
+            run = 1;
+            if (name.Length > FilePrefix.Length + StampLength + 1
+                && name[FilePrefix.Length + StampLength] == '-'
+                && int.TryParse(name.Substring(FilePrefix.Length + StampLength + 1), NumberStyles.None, CultureInfo.InvariantCulture, out int n))
+            {
+                stamp = name.Substring(0, FilePrefix.Length + StampLength);
+                run = n;
+                return;
+            }
+
+            stamp = name;
         }
 
         /// <summary>Deletes the oldest log files until at most <paramref name="keep"/> remain. Returns the deleted paths.</summary>

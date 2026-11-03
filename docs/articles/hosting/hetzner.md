@@ -10,7 +10,7 @@ plus rendezvous on first boot -- unlike GenericVps, there's no box to rent by ha
    GHCR.
 2. Registers your SSH public key with Hetzner (`POST /ssh_keys`, reusing an already-registered key
    of the same name) and creates a server (`POST /servers`) from the `ubuntu-24.04` image with a
-   `#cloud-init` user-data document: the same `docker-compose.yml` and bootstrap script
+   `#cloud-config` user-data document: the same `docker-compose.yml` and bootstrap script
    `GenericVpsProvisioner` uploads over SSH, but run automatically by cloud-init on first boot.
 3. Creates a Hetzner Cloud Firewall with one rule per declared port (your game port, at its own
    protocol) plus the rendezvous service's TCP port, and applies it to the new server -- a hard

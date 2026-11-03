@@ -84,7 +84,7 @@ public class CloudInitRendererTests
             new Dictionary<string, string> { ["MINDATTIC_RENDEZVOUS_SECRET"] = "s3cr3t" },
             "ghcr.io", "octocat", "ghp_token", "ssh-ed25519 AAAA... me@laptop");
 
-        Assert.That(userData, Does.StartWith("#cloud-init\n"));
+        Assert.That(userData, Does.StartWith("#cloud-config\n"));
         Assert.That(userData, Does.Contain("ssh_authorized_keys:"));
         Assert.That(userData, Does.Contain("ssh-ed25519 AAAA... me@laptop"));
         Assert.That(userData, Does.Contain("path: /root/docker-compose.yml"));

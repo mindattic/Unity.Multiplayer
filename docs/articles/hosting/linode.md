@@ -12,7 +12,7 @@ rent by hand first.
 2. Creates an instance (`POST /linode/instances`) from `linode/ubuntu24.04` with your SSH public key
    embedded directly as an `authorized_keys` entry -- unlike the other UM-T26 providers, Linode has
    no separate "register a key" resource for instance creation, so `mp-host` skips that round trip --
-   and a `#cloud-init` user-data document (base64-encoded into the instance's metadata, which
+   and a `#cloud-config` user-data document (base64-encoded into the instance's metadata, which
    requires an image with Metadata service support; Ubuntu 24.04 has it): the same
    `docker-compose.yml` and bootstrap script `GenericVpsProvisioner` uploads over SSH, but run
    automatically by cloud-init on first boot.

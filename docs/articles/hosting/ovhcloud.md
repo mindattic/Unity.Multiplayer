@@ -13,7 +13,7 @@ security groups rather than a flat per-instance firewall list.
    GHCR.
 2. Registers your SSH public key with your OVH Public Cloud project (`POST .../sshkey`, reusing an
    already-registered key of the same name) and creates an instance (`POST .../instance`) from Ubuntu
-   with a `#cloud-init` user-data document: the same `docker-compose.yml` and bootstrap script
+   with a `#cloud-config` user-data document: the same `docker-compose.yml` and bootstrap script
    `GenericVpsProvisioner` uploads over SSH, but run automatically by cloud-init on first boot.
 3. Creates an OVH security group in the instance's region with one ingress rule per declared port
    (your game port, at its own protocol) plus the rendezvous service's TCP port, source

@@ -139,7 +139,13 @@ namespace Unity.Multiplayer
                 throw new ArgumentNullException(nameof(startup));
             }
 
-            ServerHost host = owner.GetComponent<ServerHost>() ?? owner.AddComponent<ServerHost>();
+            // Not `??`: in the Editor a missing component comes back as Unity's fake-null object, which `??` keeps.
+            ServerHost host = owner.GetComponent<ServerHost>();
+            if (host == null)
+            {
+                host = owner.AddComponent<ServerHost>();
+            }
+
             host.Begin(session, config, startup);
             return host;
         }

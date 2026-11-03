@@ -108,7 +108,7 @@ public static class CloudInitRenderer
     }
 
     /// <summary>
-    /// A <c>#cloud-init</c> user-data document for the plain-VPS cloud providers (UM-T26: Hetzner,
+    /// A <c>#cloud-config</c> user-data document for the plain-VPS cloud providers (UM-T26: Hetzner,
     /// Vultr, DigitalOcean, Linode, OVHcloud): wraps the same <see cref="RenderCompose"/> compose
     /// file and <see cref="RenderBootstrapScript"/> bootstrap script that <c>GenericVpsProvisioner</c>
     /// uploads and runs over SSH, but as cloud-init <c>write_files</c>/<c>runcmd</c> so the provider
@@ -124,7 +124,7 @@ public static class CloudInitRenderer
         string bootstrap = RenderBootstrapScript(ghcrRegistry, ghcrUsername);
 
         var text = new StringBuilder();
-        text.Append("#cloud-init\n");
+        text.Append("#cloud-config\n"); // the only header cloud-init reads as YAML; "#cloud-init" is ignored as unknown user-data
         text.Append("ssh_authorized_keys:\n");
         text.Append("  - ").Append(sshPublicKey.Trim()).Append('\n');
         text.Append("write_files:\n");

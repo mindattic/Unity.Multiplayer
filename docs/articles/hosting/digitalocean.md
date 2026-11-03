@@ -10,7 +10,7 @@ container plus rendezvous on first boot -- unlike GenericVps, there's no box to 
    GHCR.
 2. Registers your SSH public key with DigitalOcean (`POST /v2/account/keys`, reusing an
    already-registered key of the same name) and creates a droplet (`POST /v2/droplets`) from
-   `ubuntu-24-04-x64` with a `#cloud-init` user-data document: the same `docker-compose.yml` and
+   `ubuntu-24-04-x64` with a `#cloud-config` user-data document: the same `docker-compose.yml` and
    bootstrap script `GenericVpsProvisioner` uploads over SSH, but run automatically by cloud-init on
    first boot.
 3. Creates a DigitalOcean Cloud Firewall with one inbound rule per declared port (your game port, at

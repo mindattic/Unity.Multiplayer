@@ -96,7 +96,13 @@ namespace Unity.Multiplayer
                 return null;
             }
 
-            GameLiftServerHost component = owner.GetComponent<GameLiftServerHost>() ?? owner.AddComponent<GameLiftServerHost>();
+            // Not `??`: in the Editor a missing component comes back as Unity's fake-null object, which `??` keeps.
+            GameLiftServerHost component = owner.GetComponent<GameLiftServerHost>();
+            if (component == null)
+            {
+                component = owner.AddComponent<GameLiftServerHost>();
+            }
+
             component.Begin(host, session, gamePort);
             return component;
         }

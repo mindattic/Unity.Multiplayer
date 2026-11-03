@@ -10,7 +10,7 @@ rendezvous on first boot -- unlike GenericVps, there's no box to rent by hand fi
    GHCR.
 2. Registers your SSH public key with Vultr (`POST /ssh-keys`, reusing an already-registered key of
    the same name) and creates an instance (`POST /instances`) from Ubuntu 24.04 LTS with a
-   `#cloud-init` user-data document (base64-encoded, as Vultr's API requires): the same
+   `#cloud-config` user-data document (base64-encoded, as Vultr's API requires): the same
    `docker-compose.yml` and bootstrap script `GenericVpsProvisioner` uploads over SSH, but run
    automatically by cloud-init on first boot.
 3. Creates a Vultr firewall group with one rule per declared port (your game port, at its own

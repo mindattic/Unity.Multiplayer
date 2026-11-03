@@ -54,9 +54,11 @@ public sealed class SshAskPass : IDisposable
         // Echoes the passphrase it inherited from ssh's own environment (set below) back to ssh's
         // askpass prompt. Holds no secret of its own -- only the env var's name -- so the script
         // file itself needs no special protection; only the one ssh process ever gets the value.
+        // cmd: delayed expansion (!VAR!) is never re-parsed, unlike %VAR%, so a passphrase holding & | < > ^ is
+        // echoed as typed instead of being run as commands. sh: printf, since dash's echo rewrites backslashes.
         string script = windows
-            ? $"@echo off{Environment.NewLine}echo %{PassphraseEnvVar}%{Environment.NewLine}"
-            : $"#!/bin/sh{Environment.NewLine}echo \"${PassphraseEnvVar}\"{Environment.NewLine}";
+            ? $"@echo off{Environment.NewLine}setlocal EnableDelayedExpansion{Environment.NewLine}echo(!{PassphraseEnvVar}!{Environment.NewLine}"
+            : $"#!/bin/sh{Environment.NewLine}printf '%s\\n' \"${PassphraseEnvVar}\"{Environment.NewLine}";
         File.WriteAllText(scriptPath, script);
         if (!windows)
         {

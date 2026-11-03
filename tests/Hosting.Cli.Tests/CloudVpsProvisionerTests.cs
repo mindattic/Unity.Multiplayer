@@ -54,7 +54,7 @@ public class CloudVpsProvisionerTests
         Assert.That(create.Size, Is.EqualTo("test-size"));
         Assert.That(create.ImageSlug, Is.EqualTo("ubuntu-24.04"));
         Assert.That(create.SshKeyId, Is.EqualTo("key-1"));
-        Assert.That(create.CloudInitUserData, Does.Contain("#cloud-init"));
+        Assert.That(create.CloudInitUserData, Does.Contain("#cloud-config"));
         Assert.That(create.CloudInitUserData, Does.Contain("ghcr.io/mindattic/game:v1"));
         Assert.That(result.ServerId, Is.EqualTo("server-1"));
         Assert.That(result.PublicAddress, Is.EqualTo("198.51.100.1"));

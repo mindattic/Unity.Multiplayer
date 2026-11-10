@@ -107,3 +107,8 @@ _Nothing recorded yet._
 | UM-T84 | 2026-10-31 | feature | closed | LAMP: move Unity.Multiplayer Hosting.Cli's app-level settings and keys to MindAttic.Vault.Desktop (manifest, LoadOrSeed, shared named keys, cog opens Vault) | 4044ad3 Hosting.Cli.Tests (343/343); editing via M.VALT-T62 |
 | UM-T85 | 2026-10-31 | fix | closed | Hosting.Cli references MindAttic.Vault 7.0.0 (UM-T84) but lib/local-packages only holds Vault 6.0.0, so CI's restore (Hosting.Cli.Tests, game-smoke) can't find it; drop MindAttic.Vault.7.0.0.nupkg into lib/local-packages per NuGet.config's note | 39c8168 restore into an empty package cache succeeds |
 | UM-T86 | 2026-10-31 | docs | closed | Update USER_STORIES.md | — |
+| UM-T87 | 2026-11-02 | fix | closed | Bughunt sweep, two passes: find and fix real bugs across tracked source (user request 2026-11-02) | — |
+| UM-T88 | 2026-11-02 | fix | closed | Fix the open items the 2026-11-02 bughunt left for decision (IPv6 host parsing in GetSshCreds, ServerLogFile prune by mtime, compile check of ServerHost/GameLiftServerHost) | — |
+| UM-T89 | 2026-11-03 | fix | closed | GetSshCreds: backward-compat for old unbracketed IPv6 addr:port SSH targets | 93f9561 |
+| UM-T90 | 2026-11-10 | chore | closed | Crash recovery: commit the command-catalog sync (.agent/commands/*.md) and regenerated docs/USER_STORIES.md left uncommitted by the session crash | — |
+| UM-T91 | 2026-11-10 | chore | open | Crash recovery: commit the command-catalog sync (.agent/commands/*.md) and regenerated docs/USER_STORIES.md left uncommitted by the session crash | — |

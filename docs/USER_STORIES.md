@@ -111,4 +111,5 @@ _Nothing recorded yet._
 | UM-T88 | 2026-11-02 | fix | closed | Fix the open items the 2026-11-02 bughunt left for decision (IPv6 host parsing in GetSshCreds, ServerLogFile prune by mtime, compile check of ServerHost/GameLiftServerHost) | — |
 | UM-T89 | 2026-11-03 | fix | closed | GetSshCreds: backward-compat for old unbracketed IPv6 addr:port SSH targets | 93f9561 |
 | UM-T90 | 2026-11-10 | chore | closed | Crash recovery: commit the command-catalog sync (.agent/commands/*.md) and regenerated docs/USER_STORIES.md left uncommitted by the session crash | — |
-| UM-T91 | 2026-11-10 | chore | open | Crash recovery: commit the command-catalog sync (.agent/commands/*.md) and regenerated docs/USER_STORIES.md left uncommitted by the session crash | — |
+| UM-T91 | 2026-11-10 | chore | closed | Crash recovery: commit the command-catalog sync (.agent/commands/*.md) and regenerated docs/USER_STORIES.md left uncommitted by the session crash | — |
+| UM-T92 | 2026-11-10 | chore | open | Crash recovery / fleet sync: commit the regenerated docs/USER_STORIES.md left uncommitted after other tickets closed elsewhere | — |

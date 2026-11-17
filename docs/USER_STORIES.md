@@ -112,4 +112,5 @@ _Nothing recorded yet._
 | UM-T89 | 2026-11-03 | fix | closed | GetSshCreds: backward-compat for old unbracketed IPv6 addr:port SSH targets | 93f9561 |
 | UM-T90 | 2026-11-10 | chore | closed | Crash recovery: commit the command-catalog sync (.agent/commands/*.md) and regenerated docs/USER_STORIES.md left uncommitted by the session crash | — |
 | UM-T91 | 2026-11-10 | chore | closed | Crash recovery: commit the command-catalog sync (.agent/commands/*.md) and regenerated docs/USER_STORIES.md left uncommitted by the session crash | — |
-| UM-T92 | 2026-11-10 | chore | open | Crash recovery / fleet sync: commit the regenerated docs/USER_STORIES.md left uncommitted after other tickets closed elsewhere | — |
+| UM-T92 | 2026-11-10 | chore | closed | Crash recovery / fleet sync: commit the regenerated docs/USER_STORIES.md left uncommitted after other tickets closed elsewhere | — |
+| UM-T93 | 2026-11-17 | docs | closed | Update USER_STORIES.md | — |
